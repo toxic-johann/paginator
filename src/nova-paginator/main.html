@@ -10,6 +10,9 @@
             text-align: center;
             box-sizing: border-box;
         }
+        :host[default-style] input{
+            width: 28px;
+        }
 
         :host[default-style] a:not([disabled]):hover {
             color: rgb(0, 188, 212);
@@ -20,17 +23,27 @@
             cursor: default;
         }
 
+        :host[default-style] a[hide] {
+            display: none;
+        }
+        :host[default-style] input[hide] {
+            display: none;
+        }
+        :host[default-style] span[hide] {
+            display: none;
+        }
+
         :host[default-style] a[current] {
             color: rgb(0, 188, 212);
         }
     </style>
     <template>
         <template-if if="{{showFirstAndLast}}">
-        <a href="#" disabled_="{{page == 0}}" data-page="0">{{firstText}}</a>
+        <a href="#" disabled_="{{page == 0}}" hide_="{{pageCount <= 0}}" data-page="0">{{firstText}}</a>
         </template-if>
 
         <template-if if="{{showPrevAndNext}}">
-        <a href="#" disabled_="{{page <= 0}}" data-page_="{{page - 1}}">{{prevText}}</a>
+        <a href="#" disabled_="{{page <= 0}}" hide_="{{pageCount <= 0}}" data-page_="{{page - 1}}">{{prevText}}</a>
         </template-if>
 
         <template is="template-repeat" items="{{pageSpanArray}}">
@@ -38,12 +51,16 @@
         </template>
 
         <template-if if="{{showPrevAndNext}}">
-        <a href="#" disabled_="{{page >= pageCount - 1}}" data-page_="{{page + 1}}">{{nextText}}</a>
+        <a href="#" disabled_="{{page >= pageCount - 1}}" hide_="{{pageCount <= 0}}"  data-page_="{{page + 1}}">{{nextText}}</a>
         </template-if>
 
         <template-if if="{{showFirstAndLast}}">
-        <a href="#" disabled_="{{page == pageCount - 1}}" data-page_="{{pageCount - 1}}">{{lastText}}</a>
+        <a href="#" disabled_="{{page == pageCount - 1}}" hide_="{{pageCount <= 0}}"  data-page_="{{pageCount - 1}}">{{lastText}}</a>
         </template-if>
+
+        <template-if if="{{showJumpNumber}}">
+        <input hide_="{{pageCount <= 0 || pageCount <= pageSpan}}" type="tel" placeholder="{{page+1}}"><span hide_="{{pageCount <= 0 || pageCount <= pageSpan}}">/{{pageCount}}</span> 
+        </tempkate-if>
     </template>
     <script>
         Nova.Components.NovaPaginator = Nova({
@@ -92,6 +109,12 @@
                     value: false
                 },
 
+                //是否显示输入跳转页面框
+                showJumpNumber:{
+                    type:Boolean,
+                    value:false
+                },
+
                 firstText: {
                     type: String,
                     value: '首页'
@@ -132,6 +155,16 @@
                 $(this).on('click', 'a:not([disabled]):not([current])', function() {
                     var page = $(this).attr('data-page');
                     self.page = parseInt(page);
+                });
+                $(this).on("keypress","input",function(evt){
+                    if( evt.keyCode == 13 ) {
+                        evt.preventDefault();
+                        var page =  parseInt($(this).val())-1
+                        page = page>self.pageCount?self.pageCount-1:page;
+                        page = page<0?0:page;
+                        self.page =page;
+                        $(this).val("");
+                    }
                 });
             },
 
